@@ -27,8 +27,11 @@ dist-ssr
 .env
 
 # Spring Boot build and runtime artifacts
-backend-spring/target/
-backend-spring/storage/
+backend/target/
+backend/storage/
+
+# Vite local cache
+.vite/
 
 # Temporary local smoke-test outputs
 e2e-*.txt

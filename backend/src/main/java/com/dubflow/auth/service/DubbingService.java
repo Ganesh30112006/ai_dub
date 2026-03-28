@@ -99,6 +99,8 @@ public class DubbingService {
         Path cwd = Paths.get("").toAbsolutePath().normalize();
         if (Files.exists(cwd.resolve("pom.xml"))) {
             this.backendProjectDir = cwd;
+        } else if (Files.exists(cwd.resolve("backend").resolve("pom.xml"))) {
+            this.backendProjectDir = cwd.resolve("backend").normalize();
         } else if (Files.exists(cwd.resolve("backend-spring").resolve("pom.xml"))) {
             this.backendProjectDir = cwd.resolve("backend-spring").normalize();
         } else {

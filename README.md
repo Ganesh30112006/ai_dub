@@ -1,14 +1,13 @@
-# DubFlow Frontend
+# DubFlow
 
-TODO: Document your project here
+Repository layout:
 
-## Spring Boot Backend (No Docker)
+- `frontend/` -> React + Vite web app
+- `backend/` -> Spring Boot API
 
-A Spring Boot auth backend is available in `backend-spring` and matches the frontend auth contract.
+## Run Backend (MySQL)
 
-### Run Backend
-
-1. Open a terminal in `backend-spring`
+1. Open a terminal in `backend`
 2. Start the server:
 
 ```bash
@@ -17,7 +16,7 @@ mvn spring-boot:run
 
 Backend runs on `http://localhost:8081` by default.
 
-MySQL is required for backend runtime. Default local values are:
+MySQL defaults:
 
 - `DB_URL=jdbc:mysql://localhost:3306/dubflow?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC`
 - `DB_USERNAME=root`
@@ -25,13 +24,20 @@ MySQL is required for backend runtime. Default local values are:
 
 Override these environment variables if your local MySQL setup differs.
 
-### Run Frontend Against Spring Boot
+## Run Frontend
 
-1. Keep `VITE_ENABLE_AUTH_MOCK=false`
-2. Set `VITE_API_BASE_URL=http://localhost:8081`
-3. Keep `VITE_AUTH_API_PATH=/api/auth`
+1. Open a second terminal in `frontend`
+2. Keep `VITE_ENABLE_AUTH_MOCK=false`
+3. Set `VITE_API_BASE_URL=http://localhost:8081`
+4. Keep `VITE_AUTH_API_PATH=/api/auth`
+5. Start dev server:
 
-Then run the frontend normally.
+```bash
+npm install
+npm run dev -- --port 8082
+```
+
+Open `http://localhost:8082`.
 
 ### Implemented Backend Endpoints
 
@@ -63,7 +69,7 @@ Required on backend runtime:
 
 ## Auth API Wiring
 
-Frontend auth is now connected to real HTTP endpoints via `src/lib/auth-api.ts`.
+Frontend auth is now connected to real HTTP endpoints via `frontend/src/lib/auth-api.ts`.
 
 ### Environment Variables
 
