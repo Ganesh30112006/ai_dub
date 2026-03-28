@@ -2,9 +2,16 @@ import { motion } from "framer-motion";
 import { AudioLines } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, logout, user } = useAuth();
+
+  const handleLogout = async () => {
+    await logout();
+    navigate("/");
+  };
 
   return (
     <motion.nav
@@ -23,16 +30,41 @@ const Navbar = () => {
             variant="ghost"
             size="sm"
             className="text-muted-foreground hover:text-foreground"
+            onClick={() => navigate("/#features")}
           >
             Docs
           </Button>
-          <Button
-            size="sm"
-            className="glow-button text-primary-foreground font-medium"
-            onClick={() => navigate("/dashboard")}
-          >
-            Dashboard
-          </Button>
+          {!isAuthenticated ? (
+            <>
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-muted-foreground hover:text-foreground"
+                onClick={() => navigate("/auth")}
+              >
+                Login
+              </Button>
+              <Button
+                size="sm"
+                className="glow-button text-primary-foreground font-medium"
+                onClick={() => navigate("/auth")}
+              >
+                Get Started
+              </Button>
+            </>
+          ) : (
+            <>
+              <span className="hidden sm:inline text-xs text-muted-foreground">{user?.name}</span>
+              <Button
+                size="sm"
+                className="glow-button text-primary-foreground font-medium"
+                onClick={() => navigate(user?.onboardingCompleted ? "/dashboard" : "/onboarding")}
+              >
+                Dashboard
+              </Button>
+              <Button variant="outline" size="sm" onClick={() => void handleLogout()}>Logout</Button>
+            </>
+          )}
         </div>
       </div>
     </motion.nav>

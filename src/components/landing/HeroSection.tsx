@@ -3,9 +3,11 @@ import { ArrowRight, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import WaveformAnimation from "./WaveformAnimation";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 const HeroSection = () => {
   const navigate = useNavigate();
+  const { isAuthenticated, user } = useAuth();
 
   return (
     <section className="relative min-h-screen flex items-center justify-center hero-gradient overflow-hidden">
@@ -61,9 +63,9 @@ const HeroSection = () => {
           <Button
             size="lg"
             className="glow-button text-primary-foreground font-semibold px-8 h-12 text-base"
-            onClick={() => navigate("/dashboard")}
+            onClick={() => navigate(isAuthenticated ? (user?.onboardingCompleted ? "/dashboard" : "/onboarding") : "/auth")}
           >
-            Upload Media
+            {isAuthenticated ? "Go to Dashboard" : "Start for Free"}
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
           <Button

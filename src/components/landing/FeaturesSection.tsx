@@ -11,7 +11,7 @@ const features = [
 ];
 
 const FeaturesSection = () => (
-  <section className="py-32 relative">
+  <section id="features" className="py-32 relative">
     <div className="container mx-auto px-6">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -34,13 +34,18 @@ const FeaturesSection = () => (
             key={f.title}
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
+            whileHover={{ y: -6 }}
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: i * 0.1 }}
             className="glass-card-hover p-6 group cursor-default"
           >
-            <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
+            <motion.div
+              className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors"
+              whileHover={{ rotate: 6, scale: 1.05 }}
+              transition={{ type: "spring", stiffness: 260, damping: 16 }}
+            >
               <f.icon className="h-5 w-5 text-primary" />
-            </div>
+            </motion.div>
             <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
             <p className="text-muted-foreground text-sm leading-relaxed">{f.desc}</p>
           </motion.div>
