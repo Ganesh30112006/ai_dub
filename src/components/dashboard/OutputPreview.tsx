@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Play, Pause, Download, Volume2, Sparkles, Captions, Languages, Music2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -7,13 +7,54 @@ import { Progress } from "@/components/ui/progress";
 import { Slider } from "@/components/ui/slider";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useDubbing } from "@/context/DubbingContext";
+import { dubbingApi } from "@/lib/dubbing-api";
 
 const OutputPreview = () => {
   const [playing, setPlaying] = useState(false);
-  const [language, setLanguage] = useState("es");
+  const { job, timeline, uploadedAsset, downloadExport } = useDubbing();
+  const [language, setLanguage] = useState(job?.targetLanguage || "es");
   const [position, setPosition] = useState([32]);
   const [voiceMix, setVoiceMix] = useState([76]);
   const [ducking, setDucking] = useState([48]);
+  const [exportFormat, setExportFormat] = useState("mp4");
+  const mediaRef = useRef<HTMLMediaElement | null>(null);
+
+  const exportUrl = useMemo(() => {
+    if (!job?.id || !job.exportReady) {
+      return null;
+    }
+    return `${dubbingApi.getExportUrl(job.id)}?t=${encodeURIComponent(job.updatedAt || "")}`;
+  }, [job?.id, job?.exportReady, job?.updatedAt]);
+
+  const isVideoUpload = !!uploadedAsset?.contentType?.startsWith("video");
+
+  useEffect(() => {
+    setPlaying(false);
+    if (mediaRef.current) {
+      mediaRef.current.pause();
+      mediaRef.current.currentTime = 0;
+    }
+  }, [exportUrl]);
+
+  const togglePlayback = async () => {
+    if (!mediaRef.current || !exportUrl) {
+      return;
+    }
+
+    if (playing) {
+      mediaRef.current.pause();
+      setPlaying(false);
+      return;
+    }
+
+    try {
+      await mediaRef.current.play();
+      setPlaying(true);
+    } catch {
+      setPlaying(false);
+    }
+  };
 
   return (
     <div className="glass-card p-6">
@@ -22,11 +63,11 @@ const OutputPreview = () => {
         <div className="flex items-center gap-2">
           <Badge variant="secondary" className="gap-1">
             <Sparkles className="h-3 w-3" />
-            Quality 89
+            Quality {job?.status === "COMPLETED" ? "89" : "--"}
           </Badge>
           <Badge variant="outline" className="gap-1">
             <Languages className="h-3 w-3" />
-            6 tracks
+            {timeline.length || 0} tracks
           </Badge>
         </div>
       </div>
@@ -43,13 +84,47 @@ const OutputPreview = () => {
             <div className="absolute inset-0 bg-gradient-to-br from-primary/10 via-primary/5 to-accent/10" />
             <div className="absolute top-3 left-3 flex items-center gap-2">
               <Badge variant="outline" className="bg-background/50">Dub v1.4</Badge>
-              <Badge variant="outline" className="bg-background/50">{language.toUpperCase()}</Badge>
+              <Badge variant="outline" className="bg-background/50">{(job?.targetLanguage || language).toUpperCase()}</Badge>
             </div>
+
+            {exportUrl && isVideoUpload && exportFormat !== "wav" ? (
+              <video
+                ref={(el) => {
+                  mediaRef.current = el;
+                }}
+                src={exportUrl}
+                controls
+                className="absolute inset-0 h-full w-full object-contain"
+                onPause={() => setPlaying(false)}
+                onPlay={() => setPlaying(true)}
+                onEnded={() => setPlaying(false)}
+              />
+            ) : exportUrl ? (
+              <div className="w-full px-6 relative z-10">
+                <audio
+                  ref={(el) => {
+                    mediaRef.current = el;
+                  }}
+                  src={exportUrl}
+                  controls
+                  className="w-full"
+                  onPause={() => setPlaying(false)}
+                  onPlay={() => setPlaying(true)}
+                  onEnded={() => setPlaying(false)}
+                />
+                <p className="text-xs text-muted-foreground mt-3 text-center">
+                  Dubbed audio preview loaded from generated export.
+                </p>
+              </div>
+            ) : (
+              <p className="relative z-10 text-sm text-muted-foreground">No export yet. Complete dubbing to preview audio.</p>
+            )}
 
             <motion.button
               whileTap={{ scale: 0.9 }}
               whileHover={{ scale: 1.08 }}
-              onClick={() => setPlaying(!playing)}
+              onClick={() => void togglePlayback()}
+              disabled={!exportUrl}
               className="relative z-10 w-16 h-16 rounded-full bg-primary/20 backdrop-blur-sm border border-primary/30 flex items-center justify-center"
             >
               {playing ? (
@@ -95,15 +170,15 @@ const OutputPreview = () => {
           <div className="grid sm:grid-cols-3 gap-3">
             <div className="rounded-lg border border-border/80 bg-background/30 p-3">
               <p className="text-xs text-muted-foreground">Pronunciation</p>
-              <Progress value={92} className="h-2 mt-2" />
+              <Progress value={job?.status === "COMPLETED" ? 92 : 0} className="h-2 mt-2" />
             </div>
             <div className="rounded-lg border border-border/80 bg-background/30 p-3">
               <p className="text-xs text-muted-foreground">Lip-sync</p>
-              <Progress value={84} className="h-2 mt-2" />
+              <Progress value={job?.status === "COMPLETED" ? 84 : 0} className="h-2 mt-2" />
             </div>
             <div className="rounded-lg border border-border/80 bg-background/30 p-3">
               <p className="text-xs text-muted-foreground">Background blend</p>
-              <Progress value={88} className="h-2 mt-2" />
+              <Progress value={job?.status === "COMPLETED" ? 88 : 0} className="h-2 mt-2" />
             </div>
           </div>
         </TabsContent>
@@ -140,9 +215,12 @@ const OutputPreview = () => {
               Subtitle Preview
             </div>
             {[
-              "[00:14] Welcome to DubFlow, where your content speaks every language.",
-              "[00:18] Select a target language and generate your first studio-quality dub.",
-              "[00:24] Fine-tune timing and export in platform-ready formats.",
+              ...(timeline.length
+                ? timeline.map(
+                    (segment) =>
+                      `[${String(Math.floor(segment.startSeconds / 60)).padStart(2, "0")}:${String(segment.startSeconds % 60).padStart(2, "0")}] ${segment.translatedText}`,
+                  )
+                : ["Processing not complete yet. Captions will appear after alignment."]),
             ].map((line) => (
               <p key={line} className="text-sm text-muted-foreground leading-relaxed">
                 {line}
@@ -153,11 +231,12 @@ const OutputPreview = () => {
       </Tabs>
 
       <div className="flex flex-wrap items-center gap-3 mt-4">
-        <Select value={language} onValueChange={setLanguage}>
+        <Select value={job?.targetLanguage || language} onValueChange={setLanguage}>
           <SelectTrigger className="w-44 bg-muted/50 border-border">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
+            <SelectItem value="en">🇺🇸 English</SelectItem>
             <SelectItem value="es">🇪🇸 Spanish</SelectItem>
             <SelectItem value="fr">🇫🇷 French</SelectItem>
             <SelectItem value="de">🇩🇪 German</SelectItem>
@@ -167,7 +246,7 @@ const OutputPreview = () => {
           </SelectContent>
         </Select>
 
-        <Select defaultValue="mp4">
+        <Select value={exportFormat} onValueChange={setExportFormat}>
           <SelectTrigger className="w-40 bg-muted/50 border-border">
             <SelectValue />
           </SelectTrigger>
@@ -183,7 +262,12 @@ const OutputPreview = () => {
           <Button variant="secondary" className="border-border hover:border-primary/40">
             Save Version
           </Button>
-          <Button variant="outline" className="border-border hover:border-primary/40">
+          <Button
+            variant="outline"
+            className="border-border hover:border-primary/40"
+            disabled={!job?.exportReady}
+            onClick={() => void downloadExport()}
+          >
             <Download className="h-4 w-4 mr-2" />
             Export
           </Button>

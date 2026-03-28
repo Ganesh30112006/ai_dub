@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { AudioLines, Wind, Users, FileText, Languages, Mic2, AlignHorizontalDistributeCenter, Check, Loader2 } from "lucide-react";
+import { useDubbing } from "@/context/DubbingContext";
 
 const steps = [
   { icon: AudioLines, label: "Audio Extraction" },
@@ -15,32 +15,21 @@ const steps = [
 type Status = "pending" | "running" | "completed";
 
 const ProcessingPipeline = () => {
-  const [statuses, setStatuses] = useState<Status[]>(steps.map(() => "pending"));
-
-  useEffect(() => {
-    // Simulate pipeline progression
-    let current = 0;
-    const advance = () => {
-      if (current >= steps.length) return;
-      setStatuses((prev) => {
-        const next = [...prev];
-        if (current > 0) next[current - 1] = "completed";
-        next[current] = "running";
-        return next;
-      });
-      current++;
-      setTimeout(advance, 2000 + Math.random() * 1500);
-    };
-    const t = setTimeout(advance, 1000);
-    return () => clearTimeout(t);
-  }, []);
+  const { job, refreshInProgress } = useDubbing();
+  const statusMap = new Map(job?.steps.map((step) => [step.label, step.status as Status]) ?? []);
 
   return (
     <div className="glass-card p-6">
-      <h3 className="text-lg font-semibold mb-6">Processing Pipeline</h3>
+      <div className="flex items-center justify-between mb-6">
+        <h3 className="text-lg font-semibold">Processing Pipeline</h3>
+        <span className="text-xs text-muted-foreground">
+          {job ? `${job.progress}%` : "No active job"}
+          {refreshInProgress ? " • refreshing" : ""}
+        </span>
+      </div>
       <div className="space-y-3">
         {steps.map((step, i) => {
-          const status = statuses[i];
+          const status = statusMap.get(step.label) ?? "pending";
           return (
             <motion.div
               key={step.label}

@@ -13,6 +13,7 @@ import CollaborationPanel from "@/components/dashboard/sections/CollaborationPan
 import VoiceQualityAnalytics from "@/components/dashboard/sections/VoiceQualityAnalytics";
 import UsageBillingPanel from "@/components/dashboard/sections/UsageBillingPanel";
 import UserProfilePanel from "@/components/dashboard/sections/UserProfilePanel";
+import { DubbingProvider } from "@/context/DubbingContext";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -87,44 +88,46 @@ const Dashboard = () => {
   const title = titleByRoute[location.pathname] || "Dashboard";
 
   return (
-    <SidebarProvider>
-      <div className="min-h-screen flex w-full bg-background">
-        <DashboardSidebar />
-        <div className="flex-1 flex flex-col min-w-0">
-          <header className="h-14 flex items-center border-b border-border px-4 bg-background/80 backdrop-blur-sm sticky top-0 z-40">
-            <SidebarTrigger className="mr-4" />
-            <h1 className="text-sm font-semibold">{title}</h1>
-          </header>
-          <main className="flex-1 p-4 md:p-6 overflow-auto relative">
-            <motion.div
-              className="pointer-events-none absolute -top-8 left-1/3 w-56 h-56 rounded-full bg-primary/10 blur-3xl"
-              animate={{ x: [0, 14, 0], y: [0, 12, 0] }}
-              transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
-            />
-            <motion.div
-              className="pointer-events-none absolute bottom-4 right-8 w-56 h-56 rounded-full bg-accent/10 blur-3xl"
-              animate={{ x: [0, -14, 0], y: [0, -10, 0] }}
-              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            />
+    <DubbingProvider>
+      <SidebarProvider>
+        <div className="min-h-screen flex w-full bg-background">
+          <DashboardSidebar />
+          <div className="flex-1 flex flex-col min-w-0">
+            <header className="h-14 flex items-center border-b border-border px-4 bg-background/80 backdrop-blur-sm sticky top-0 z-40">
+              <SidebarTrigger className="mr-4" />
+              <h1 className="text-sm font-semibold">{title}</h1>
+            </header>
+            <main className="flex-1 p-4 md:p-6 overflow-auto relative">
+              <motion.div
+                className="pointer-events-none absolute -top-8 left-1/3 w-56 h-56 rounded-full bg-primary/10 blur-3xl"
+                animate={{ x: [0, 14, 0], y: [0, 12, 0] }}
+                transition={{ duration: 7, repeat: Infinity, ease: "easeInOut" }}
+              />
+              <motion.div
+                className="pointer-events-none absolute bottom-4 right-8 w-56 h-56 rounded-full bg-accent/10 blur-3xl"
+                animate={{ x: [0, -14, 0], y: [0, -10, 0] }}
+                transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+              />
 
-            <Routes>
-              <Route index element={<DashboardOverview />} />
-              <Route path="upload" element={<SingleColumn><UploadZone /></SingleColumn>} />
-              <Route path="pipeline" element={<SingleColumn><ProcessingPipeline /></SingleColumn>} />
-              <Route path="timeline" element={<SingleColumn><TimelineEditor /></SingleColumn>} />
-              <Route path="output" element={<SingleColumn><OutputPreview /></SingleColumn>} />
-              <Route path="settings" element={<SingleColumn><SettingsPanel /></SingleColumn>} />
-              <Route path="templates" element={<SingleColumn><ProjectTemplates /></SingleColumn>} />
-              <Route path="team" element={<SingleColumn><CollaborationPanel /></SingleColumn>} />
-              <Route path="insights" element={<SingleColumn><VoiceQualityAnalytics /></SingleColumn>} />
-              <Route path="billing" element={<SingleColumn><UsageBillingPanel /></SingleColumn>} />
-              <Route path="profile" element={<SingleColumn><UserProfilePanel /></SingleColumn>} />
-              <Route path="*" element={<Navigate to="/dashboard" replace />} />
-            </Routes>
-          </main>
+              <Routes>
+                <Route index element={<DashboardOverview />} />
+                <Route path="upload" element={<SingleColumn><UploadZone /></SingleColumn>} />
+                <Route path="pipeline" element={<SingleColumn><ProcessingPipeline /></SingleColumn>} />
+                <Route path="timeline" element={<SingleColumn><TimelineEditor /></SingleColumn>} />
+                <Route path="output" element={<SingleColumn><OutputPreview /></SingleColumn>} />
+                <Route path="settings" element={<SingleColumn><SettingsPanel /></SingleColumn>} />
+                <Route path="templates" element={<SingleColumn><ProjectTemplates /></SingleColumn>} />
+                <Route path="team" element={<SingleColumn><CollaborationPanel /></SingleColumn>} />
+                <Route path="insights" element={<SingleColumn><VoiceQualityAnalytics /></SingleColumn>} />
+                <Route path="billing" element={<SingleColumn><UsageBillingPanel /></SingleColumn>} />
+                <Route path="profile" element={<SingleColumn><UserProfilePanel /></SingleColumn>} />
+                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+              </Routes>
+            </main>
+          </div>
         </div>
-      </div>
-    </SidebarProvider>
+      </SidebarProvider>
+    </DubbingProvider>
   );
 };
 

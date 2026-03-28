@@ -39,6 +39,26 @@ const SHOULD_USE_MOCK_AUTH =
   import.meta.env.VITE_ENABLE_AUTH_MOCK === "true" ||
   (import.meta.env.DEV && !import.meta.env.VITE_API_BASE_URL);
 
+function generateId() {
+  const cryptoApi = globalThis.crypto;
+
+  if (typeof cryptoApi?.randomUUID === "function") {
+    return cryptoApi.randomUUID();
+  }
+
+  if (typeof cryptoApi?.getRandomValues === "function") {
+    const bytes = new Uint8Array(16);
+    cryptoApi.getRandomValues(bytes);
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = Array.from(bytes, (byte) => byte.toString(16).padStart(2, "0"));
+    return `${hex.slice(0, 4).join("")}-${hex.slice(4, 6).join("")}-${hex.slice(6, 8).join("")}-${hex.slice(8, 10).join("")}-${hex.slice(10, 16).join("")}`;
+  }
+
+  const fallback = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).slice(1);
+  return `${fallback()}${fallback()}-${fallback()}-4${fallback().slice(1)}-${((8 + Math.random() * 4) | 0).toString(16)}${fallback().slice(1)}-${fallback()}${fallback()}${fallback()}`;
+}
+
 function toAuthUrl(path: string) {
   const normalizedPath = path.startsWith("/") ? path : `/${path}`;
   return `${API_BASE}${AUTH_BASE_PATH}${normalizedPath}`;
@@ -107,7 +127,7 @@ export function normalizeAuthUser(data: ApiAuthUser | undefined): AuthUser {
   const displayName = data.name || data.fullName || data.email.split("@")[0] || "User";
 
   return {
-    id: data.id || data.userId || crypto.randomUUID(),
+    id: data.id || data.userId || generateId(),
     name: displayName,
     email: data.email,
     provider,
@@ -120,7 +140,7 @@ export const authApi = {
     if (SHOULD_USE_MOCK_AUTH) {
       const namePart = input.email.split("@")[0] || "User";
       const mockUser: AuthUser = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         name: namePart.charAt(0).toUpperCase() + namePart.slice(1),
         email: input.email,
         provider: "email",
@@ -139,7 +159,7 @@ export const authApi = {
   async register(input: { firstName: string; lastName: string; email: string; password: string }) {
     if (SHOULD_USE_MOCK_AUTH) {
       const mockUser: AuthUser = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         name: `${input.firstName} ${input.lastName}`.trim(),
         email: input.email,
         provider: "email",
@@ -207,7 +227,7 @@ export const authApi = {
   }) {
     if (SHOULD_USE_MOCK_AUTH) {
       const mockUser: AuthUser = {
-        id: crypto.randomUUID(),
+        id: generateId(),
         name: input.provider === "google" ? "Google User" : "GitHub User",
         email: input.provider === "google" ? "google.user@example.com" : "github.user@example.com",
         provider: input.provider,

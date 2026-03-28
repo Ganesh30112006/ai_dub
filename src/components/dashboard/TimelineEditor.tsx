@@ -1,8 +1,9 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { motion } from "framer-motion";
+import { useDubbing } from "@/context/DubbingContext";
 
 interface Segment {
-  id: number;
+  id: number | string;
   speaker: string;
   start: number;
   end: number;
@@ -10,18 +11,53 @@ interface Segment {
   text: string;
 }
 
-const initialSegments: Segment[] = [
-  { id: 1, speaker: "Speaker A", start: 0, end: 18, color: "hsl(175, 80%, 50%)", text: "Welcome to the platform..." },
-  { id: 2, speaker: "Speaker B", start: 18, end: 35, color: "hsl(260, 70%, 60%)", text: "Let me explain the features..." },
-  { id: 3, speaker: "Speaker A", start: 35, end: 52, color: "hsl(175, 80%, 50%)", text: "That sounds great..." },
-  { id: 4, speaker: "Speaker C", start: 52, end: 70, color: "hsl(45, 90%, 55%)", text: "I'd like to add..." },
-  { id: 5, speaker: "Speaker B", start: 70, end: 90, color: "hsl(260, 70%, 60%)", text: "In conclusion..." },
-];
-
 const TimelineEditor = () => {
-  const [segments] = useState(initialSegments);
-  const [selected, setSelected] = useState<number | null>(null);
-  const totalDuration = 100;
+  const { timeline, job } = useDubbing();
+  const [selected, setSelected] = useState<number | string | null>(null);
+
+  const segments: Segment[] = useMemo(
+    () =>
+      timeline.map((segment) => ({
+        id: segment.id,
+        speaker: segment.speaker,
+        start: segment.startSeconds,
+        end: segment.endSeconds,
+        color: segment.color,
+        text: segment.translatedText,
+      })),
+    [timeline],
+  );
+
+  const totalDuration = Math.max(100, ...segments.map((segment) => segment.end));
+
+  if (!job) {
+    return (
+      <div className="glass-card p-6">
+        <h3 className="text-lg font-semibold mb-2">Timeline Editor</h3>
+        <p className="text-sm text-muted-foreground">Start a dubbing job to generate timeline segments.</p>
+      </div>
+    );
+  }
+
+  if (job.status !== "COMPLETED") {
+    return (
+      <div className="glass-card p-6">
+        <h3 className="text-lg font-semibold mb-2">Timeline Editor</h3>
+        <p className="text-sm text-muted-foreground">
+          Timeline will appear once processing completes. Current step: {job.currentStep}
+        </p>
+      </div>
+    );
+  }
+
+  if (!segments.length) {
+    return (
+      <div className="glass-card p-6">
+        <h3 className="text-lg font-semibold mb-2">Timeline Editor</h3>
+        <p className="text-sm text-muted-foreground">No segments were generated for this job.</p>
+      </div>
+    );
+  }
 
   return (
     <div className="glass-card p-6">
@@ -93,7 +129,7 @@ const TimelineEditor = () => {
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: seg.color }} />
                   <span className="font-medium text-sm">{seg.speaker}</span>
                   <span className="text-xs text-muted-foreground font-mono ml-auto">
-                    {Math.floor(seg.start * 1.2)}s – {Math.floor(seg.end * 1.2)}s
+                    {seg.start}s – {seg.end}s
                   </span>
                 </div>
                 <p className="text-sm text-muted-foreground italic">"{seg.text}"</p>

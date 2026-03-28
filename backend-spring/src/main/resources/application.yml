@@ -1,0 +1,51 @@
+server:
+  port: 8081
+
+dubflow:
+  cors:
+    allowed-origins:
+      - http://localhost:5173
+      - http://localhost:8080
+      - http://localhost:8082
+      - http://127.0.0.1:5173
+      - http://127.0.0.1:8080
+      - http://127.0.0.1:8082
+  storage:
+    root: ./storage
+  ai:
+    stale-running-timeout-minutes: ${DUBFLOW_STALE_RUNNING_TIMEOUT_MINUTES:10}
+    stale-scan-interval-ms: ${DUBFLOW_STALE_SCAN_INTERVAL_MS:30000}
+    provider: ${DUBFLOW_AI_PROVIDER:demo}
+    openai:
+      api-key: ${OPENAI_API_KEY:}
+      base-url: ${OPENAI_BASE_URL:https://api.openai.com/v1}
+      transcription-model: ${OPENAI_TRANSCRIPTION_MODEL:whisper-1}
+      translation-model: ${OPENAI_TRANSLATION_MODEL:gpt-4o-mini}
+      tts-model: ${OPENAI_TTS_MODEL:gpt-4o-mini-tts}
+  external:
+    softcatala:
+      base-url: ${SOFTCATALA_API_BASE_URL:https://api.softcatala.org/dubbing-service/v1}
+      variant: ${SOFTCATALA_VARIANT:central}
+      poll-seconds: ${SOFTCATALA_POLL_SECONDS:6}
+      timeout-minutes: ${SOFTCATALA_TIMEOUT_MINUTES:45}
+
+spring:
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/dubflow?createDatabaseIfNotExist=true&useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC}
+    username: ${DB_USERNAME:root}
+    password: ${DB_PASSWORD:root}
+    driver-class-name: ${DB_DRIVER:com.mysql.cj.jdbc.Driver}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+    properties:
+      hibernate:
+        format_sql: true
+  jackson:
+    serialization:
+      write-dates-as-timestamps: false
+  servlet:
+    multipart:
+      max-file-size: 200MB
+      max-request-size: 200MB

@@ -2,36 +2,84 @@ import { useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Upload, FileAudio, FileVideo, X } from "lucide-react";
 import { Progress } from "@/components/ui/progress";
+import { Button } from "@/components/ui/button";
+import { useDubbing } from "@/context/DubbingContext";
 
 const UploadZone = () => {
   const [isDragging, setIsDragging] = useState(false);
-  const [file, setFile] = useState<{ name: string; type: string; size: number } | null>(null);
   const [progress, setProgress] = useState(0);
+  const { uploadedAsset, uploadFile, uploadInProgress, clearUpload, settings, updateSettings } = useDubbing();
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
     const f = e.dataTransfer.files[0];
-    if (f) simulateUpload(f);
+    if (f) {
+      void performUpload(f);
+    }
   }, []);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
-    if (f) simulateUpload(f);
+    if (f) {
+      void performUpload(f);
+    }
   };
 
-  const simulateUpload = (f: File) => {
-    setFile({ name: f.name, type: f.type, size: f.size });
+  const performUpload = async (f: File) => {
     setProgress(0);
     const interval = setInterval(() => {
       setProgress((p) => {
-        if (p >= 100) { clearInterval(interval); return 100; }
-        return p + Math.random() * 15;
+        if (p >= 90) {
+          clearInterval(interval);
+          return 90;
+        }
+        return p + Math.random() * 14;
       });
     }, 200);
+
+    try {
+      await uploadFile(f);
+      setProgress(100);
+    } finally {
+      window.clearInterval(interval);
+    }
   };
 
-  const clearFile = () => { setFile(null); setProgress(0); };
+  const clearFile = () => {
+    clearUpload();
+    setProgress(0);
+  };
+
+  const uploadSampleAudio = async (assetPath: string, fileName: string) => {
+    const response = await fetch(assetPath);
+    if (!response.ok) {
+      throw new Error("Unable to load sample audio");
+    }
+    const blob = await response.blob();
+    const sampleFile = new File([blob], fileName, { type: "audio/wav" });
+    await performUpload(sampleFile);
+  };
+
+  const applyLanguageForEnglishSample = () => {
+    if (settings.targetLanguage === "en") {
+      updateSettings({ sourceLanguage: "en", targetLanguage: "es" });
+      return;
+    }
+    updateSettings({ sourceLanguage: "en" });
+  };
+
+  const applyLanguageForSpanishSample = () => {
+    if (settings.targetLanguage === "es") {
+      updateSettings({ sourceLanguage: "es", targetLanguage: "en" });
+      return;
+    }
+    updateSettings({ sourceLanguage: "es" });
+  };
+
+  const file = uploadedAsset
+    ? { name: uploadedAsset.fileName, type: uploadedAsset.contentType, size: uploadedAsset.sizeBytes }
+    : null;
 
   return (
     <div className="glass-card p-6">
@@ -64,6 +112,35 @@ const UploadZone = () => {
               Drag & drop or <span className="text-primary">browse</span>
             </p>
             <p className="text-xs text-muted-foreground/60 mt-1">MP4, MP3, WAV</p>
+
+            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={uploadInProgress}
+                onClick={(e) => {
+                  e.preventDefault();
+                  applyLanguageForEnglishSample();
+                  void uploadSampleAudio("/demo-audio/english-sample.wav", "english-sample.wav");
+                }}
+              >
+                Use English Sample
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                size="sm"
+                disabled={uploadInProgress}
+                onClick={(e) => {
+                  e.preventDefault();
+                  applyLanguageForSpanishSample();
+                  void uploadSampleAudio("/demo-audio/spanish-sample.wav", "spanish-sample.wav");
+                }}
+              >
+                Use Spanish Sample
+              </Button>
+            </div>
           </motion.label>
         ) : (
           <motion.div
@@ -91,8 +168,15 @@ const UploadZone = () => {
             </div>
             <Progress value={Math.min(progress, 100)} className="h-1.5" />
             <p className="text-xs text-muted-foreground mt-2">
-              {progress >= 100 ? "Upload complete ✓" : `Uploading... ${Math.min(Math.round(progress), 99)}%`}
+              {uploadInProgress
+                ? `Uploading... ${Math.min(Math.round(progress), 95)}%`
+                : progress >= 100
+                ? "Upload complete ✓"
+                : "Ready"}
             </p>
+            {uploadedAsset && (
+              <p className="text-xs text-muted-foreground/70 mt-1">Upload ID: {uploadedAsset.uploadId.slice(0, 8)}</p>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
