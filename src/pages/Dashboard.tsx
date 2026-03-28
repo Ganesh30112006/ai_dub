@@ -12,6 +12,7 @@ import ProjectTemplates from "@/components/dashboard/sections/ProjectTemplates";
 import CollaborationPanel from "@/components/dashboard/sections/CollaborationPanel";
 import VoiceQualityAnalytics from "@/components/dashboard/sections/VoiceQualityAnalytics";
 import UsageBillingPanel from "@/components/dashboard/sections/UsageBillingPanel";
+import UserProfilePanel from "@/components/dashboard/sections/UserProfilePanel";
 
 const containerVariants = {
   hidden: { opacity: 0 },
@@ -39,6 +40,7 @@ const titleByRoute: Record<string, string> = {
   "/dashboard/team": "Collaboration",
   "/dashboard/insights": "Voice Quality Insights",
   "/dashboard/billing": "Usage & Billing",
+  "/dashboard/profile": "User Profile",
   "/dashboard/settings": "Settings",
 };
 
@@ -116,6 +118,7 @@ const Dashboard = () => {
               <Route path="team" element={<SingleColumn><CollaborationPanel /></SingleColumn>} />
               <Route path="insights" element={<SingleColumn><VoiceQualityAnalytics /></SingleColumn>} />
               <Route path="billing" element={<SingleColumn><UsageBillingPanel /></SingleColumn>} />
+              <Route path="profile" element={<SingleColumn><UserProfilePanel /></SingleColumn>} />
               <Route path="*" element={<Navigate to="/dashboard" replace />} />
             </Routes>
           </main>

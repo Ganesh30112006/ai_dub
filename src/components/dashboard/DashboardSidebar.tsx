@@ -1,4 +1,4 @@
-import { AudioLines, Upload, Activity, Clock, Play, Settings, Home, LayoutTemplate, Users, BarChart3, CreditCard } from "lucide-react";
+import { AudioLines, Upload, Activity, Clock, Play, Settings, Home, LayoutTemplate, Users, BarChart3, CreditCard, UserCircle2 } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import {
   Sidebar,
@@ -22,6 +22,7 @@ const navItems = [
   { title: "Team", url: "/dashboard/team", icon: Users },
   { title: "Insights", url: "/dashboard/insights", icon: BarChart3 },
   { title: "Billing", url: "/dashboard/billing", icon: CreditCard },
+  { title: "Profile", url: "/dashboard/profile", icon: UserCircle2 },
   { title: "Settings", url: "/dashboard/settings", icon: Settings },
 ];
 

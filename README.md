@@ -1,4 +1,4 @@
-# Welcome to your Lovable project
+# DubFlow Frontend
 
 TODO: Document your project here
 
